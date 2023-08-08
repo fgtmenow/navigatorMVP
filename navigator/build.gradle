@@ -1,0 +1,93 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+    id 'com.google.dagger.hilt.android'
+    id 'kotlin-parcelize'
+}
+
+android {
+    namespace 'com.noxx.navigator'
+    compileSdk 33
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 33
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.0'
+    }
+
+}
+
+
+dependencies {
+    testImplementation 'androidx.test.ext:junit-ktx:1.1.5'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation "org.robolectric:robolectric:4.10.3"
+
+    implementation 'androidx.fragment:fragment-ktx:1.6.1'
+    implementation platform('androidx.compose:compose-bom:2022.10.00')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+
+    implementation "com.google.dagger:hilt-android:2.47"
+    kapt "com.google.dagger:hilt-compiler:2.47"
+
+
+    implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
+    implementation 'androidx.navigation:navigation-common-ktx:2.6.0'
+    implementation 'androidx.navigation:navigation-compose:2.6.0'
+
+    implementation 'com.jakewharton.timber:timber:5.0.1'
+
+    compileOnly "com.squareup:kotlinpoet:1.14.2"
+    compileOnly 'org.jsoup:jsoup:1.15.4'
+}
+
+afterEvaluate {
+    task runGenerator(type: JavaExec) {
+        /** params **/
+        def rootDir = project.rootDir
+        def destinationModuleSrcPath = rootProject.ext.destinationModuleSrcPath
+        def destinationModulePackageName = rootProject.ext.destinationModulePackageName
+        /** params **/
+
+        group = '_aza'
+        android.libraryVariants.each { variant -> // or libraryVariants
+            // add each variant's compiler classpath onto this classpath
+            classpath += variant.javaCompileProvider.get().classpath
+        }
+        mainClass.set('com.noxx.navigator.generator.GenerateDestinationsTaskKt')
+
+
+        args = [rootDir, destinationModuleSrcPath, destinationModulePackageName]
+        // store the output instead of printing to the console:
+        //standardOutput = new ByteArrayOutputStream()
+        // extension method genSource.output() can be used to obtain the output:
+        doLast {
+            ext.generated = standardOutput.toString()
+        }
+    }
+}
